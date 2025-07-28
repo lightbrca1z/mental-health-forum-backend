@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "railway-start": "php artisan serve --host=0.0.0.0 --port=$PORT"
+        "railway-start": "php artisan serve --host=0.0.0.0 --port=$PORT",
+        "railway-build": "composer install --no-dev --optimize-autoloader && php artisan key:generate --force && php artisan migrate --force && php artisan config:cache"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
