@@ -9,13 +9,29 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    sqlite3
+    sqlite3 \
+    libsqlite3-dev \
+    pkg-config \
+    autoconf \
+    build-essential \
+    libsqlite3-0 \
+    sqlite3-dev
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite mbstring exif pcntl bcmath gd
+# Set environment variables for SQLite3
+ENV SQLITE_CFLAGS="-I/usr/include/sqlite3"
+ENV SQLITE_LIBS="-L/usr/lib -lsqlite3"
+
+# Install PHP extensions one by one to avoid conflicts
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_sqlite
+RUN docker-php-ext-install mbstring
+RUN docker-php-ext-install exif
+RUN docker-php-ext-install pcntl
+RUN docker-php-ext-install bcmath
+RUN docker-php-ext-install gd
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
