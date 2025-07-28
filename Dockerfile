@@ -47,12 +47,6 @@ RUN chmod 664 /var/www/database/database.sqlite
 # Create .env file if it doesn't exist
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
-# Generate application key
-RUN php artisan key:generate --force
-
-# Run migrations
-RUN php artisan migrate --force
-
 # Start nginx and php-fpm
 COPY start.sh /start.sh
 RUN chmod +x /start.sh

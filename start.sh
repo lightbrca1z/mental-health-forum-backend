@@ -34,5 +34,8 @@ service nginx start
 # Start php-fpm
 php-fpm -D
 
+# Wait a moment for services to start
+sleep 5
+
 # Keep container running
 tail -f /dev/null 
