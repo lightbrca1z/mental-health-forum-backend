@@ -35,9 +35,17 @@ COPY nginx.conf /etc/nginx/sites-available/default
 RUN composer install --no-dev --optimize-autoloader
 RUN npm install
 
+# Create database directory and file
+RUN mkdir -p /var/www/database
+RUN touch /var/www/database/database.sqlite
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www
 RUN chmod -R 755 /var/www/storage
+RUN chmod 664 /var/www/database/database.sqlite
+
+# Create .env file if it doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
 # Generate application key
 RUN php artisan key:generate --force
