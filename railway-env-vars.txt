@@ -1,0 +1,33 @@
+# Railway環境変数設定
+# Railwayダッシュボードの「Variables」タブで以下を設定してください
+
+# アプリケーション設定
+APP_NAME="Mental Health Forum"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-backend-url.railway.app
+
+# データベース設定
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/database/database.sqlite
+
+# セッション設定
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+# キャッシュ設定
+CACHE_DRIVER=file
+
+# ファイルシステム設定
+FILESYSTEM_DISK=local
+
+# ログ設定
+LOG_CHANNEL=stack
+LOG_LEVEL=error
+
+# ポート設定（Railwayが自動設定）
+PORT=8000
+
+# その他の設定
+BROADCAST_DRIVER=log
+QUEUE_CONNECTION=sync 

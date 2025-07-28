@@ -34,8 +34,21 @@ service nginx start
 # Start php-fpm
 php-fpm -D
 
-# Wait a moment for services to start
-sleep 5
+# Wait for services to be ready
+sleep 10
+
+# Test if services are running
+if ! pgrep -x "nginx" > /dev/null; then
+    echo "nginx failed to start"
+    exit 1
+fi
+
+if ! pgrep -x "php-fpm" > /dev/null; then
+    echo "php-fpm failed to start"
+    exit 1
+fi
+
+echo "Services started successfully"
 
 # Keep container running
 tail -f /dev/null 
