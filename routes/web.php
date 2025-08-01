@@ -8,18 +8,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Simple health check endpoint for Railway (no database check)
-Route::get('/health', function () {
-    return response('healthy', 200)
-        ->header('Content-Type', 'text/plain');
-});
-
-// Alternative health check endpoint (no database check)
-Route::get('/up', function () {
-    return response('ok', 200)
-        ->header('Content-Type', 'text/plain');
-});
-
 // Detailed health check endpoint with database check
 Route::get('/health/detailed', function () {
     try {
@@ -48,6 +36,7 @@ Route::get('/debug', function () {
     try {
         $dbConnected = false;
         $dbError = null;
+        $dbConfig = config('database.connections.' . config('database.default'));
         
         try {
             DB::connection()->getPdo();
@@ -62,8 +51,11 @@ Route::get('/debug', function () {
             'database' => config('database.default'),
             'app_env' => config('app.env'),
             'app_debug' => config('app.debug'),
-            'database_path' => config('database.connections.sqlite.database'),
-            'database_exists' => file_exists(config('database.connections.sqlite.database')),
+            'database_config' => [
+                'driver' => $dbConfig['driver'] ?? 'unknown',
+                'host' => $dbConfig['host'] ?? 'unknown',
+                'database' => $dbConfig['database'] ?? 'unknown',
+            ],
             'database_connected' => $dbConnected,
             'database_error' => $dbError,
         ]);
