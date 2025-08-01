@@ -8,11 +8,14 @@ return [
         'http://localhost:3001',
         'https://mental-health-forum-frontend.vercel.app',
         'https://mental-health-forum-frontend-production.up.railway.app',
-        'https://mental-health-forum-frontend.railway.app'
+        'https://mental-health-forum-frontend.railway.app',
+        'https://mental-health-forum-frontend.up.railway.app',
+        'https://mental-health-forum-frontend-production.railway.app'
     ],
     'allowed_origins_patterns' => [
         'https://*.railway.app',
-        'https://*.vercel.app'
+        'https://*.vercel.app',
+        'https://*.up.railway.app'
     ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],

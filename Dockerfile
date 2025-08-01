@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y \
     autoconf \
     build-essential \
     libsqlite3-0 \
-    sqlite3-dev
+    sqlite3-dev \
+    nginx
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -39,11 +40,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copy existing application directory contents
+COPY . /var/www
 
 # Create database directory and file
 RUN mkdir -p /var/www/database
@@ -52,18 +56,27 @@ RUN touch /var/www/database/database.sqlite
 # Set permissions
 RUN chown -R www-data:www-data /var/www
 RUN chmod -R 755 /var/www/storage
+RUN chmod -R 755 /var/www/bootstrap/cache
 RUN chmod 664 /var/www/database/database.sqlite
-
-# Create .env file if it doesn't exist
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
 # Create startup script
 RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'if [ ! -f .env ]; then cp .env.example .env; fi' >> /start.sh && \
-    echo 'if [ ! -f database/database.sqlite ]; then touch database/database.sqlite; fi' >> /start.sh && \
+    echo 'set -e' >> /start.sh && \
+    echo 'echo "Starting Laravel application..."' >> /start.sh && \
+    echo 'if [ ! -f .env ]; then' >> /start.sh && \
+    echo '  echo "Creating .env file..."' >> /start.sh && \
+    echo '  cp .env.example .env' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'if [ ! -f database/database.sqlite ]; then' >> /start.sh && \
+    echo '  echo "Creating database file..."' >> /start.sh && \
+    echo '  touch database/database.sqlite' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
     echo 'chmod 664 database/database.sqlite' >> /start.sh && \
+    echo 'echo "Generating application key..."' >> /start.sh && \
     echo 'php artisan key:generate --force' >> /start.sh && \
+    echo 'echo "Running migrations..."' >> /start.sh && \
     echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'echo "Starting server on port $PORT..."' >> /start.sh && \
     echo 'php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
     chmod +x /start.sh
 

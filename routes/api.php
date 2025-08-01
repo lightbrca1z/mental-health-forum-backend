@@ -5,7 +5,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 
-// エラーハンドリング用のミドルウェア
+// CORS プリフライトリクエストを処理
+Route::options('{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+})->where('any', '.*');
+
+// API ルート
 Route::middleware(['api', 'cors'])->group(function () {
     // Posts routes
     Route::get('/posts', [PostController::class, 'index']);

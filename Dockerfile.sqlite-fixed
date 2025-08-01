@@ -1,0 +1,62 @@
+FROM php:8.2-cli
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    sqlite3 \
+    libsqlite3-dev \
+    pkg-config \
+    autoconf \
+    build-essential
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions one by one
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_sqlite
+RUN docker-php-ext-install mbstring
+RUN docker-php-ext-install bcmath
+
+# Get latest Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy existing application directory contents
+COPY . /var/www
+
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Create database directory and file
+RUN mkdir -p /var/www/database
+RUN touch /var/www/database/database.sqlite
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 755 /var/www/storage
+RUN chmod 664 /var/www/database/database.sqlite
+
+# Create .env file if it doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Create startup script
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'if [ ! -f .env ]; then cp .env.example .env; fi' >> /start.sh && \
+    echo 'if [ ! -f database/database.sqlite ]; then touch database/database.sqlite; fi' >> /start.sh && \
+    echo 'chmod 664 database/database.sqlite' >> /start.sh && \
+    echo 'php artisan key:generate --force' >> /start.sh && \
+    echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
+    chmod +x /start.sh
+
+EXPOSE 8000
+CMD ["/start.sh"] 
