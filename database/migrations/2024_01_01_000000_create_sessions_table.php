@@ -11,16 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('sessions')) {
-            Schema::create('sessions', function (Blueprint $table) {
-                $table->string('id')->primary();
-                $table->foreignId('user_id')->nullable()->index();
-                $table->string('ip_address', 45)->nullable();
-                $table->text('user_agent')->nullable();
-                $table->text('payload');
-                $table->integer('last_activity')->index();
-            });
-        }
+        // Sessions are now handled by file driver, no database table needed
+        // This migration is disabled to prevent database connection issues
     }
 
     /**

@@ -39,6 +39,8 @@ Route::get('/debug', function () {
             'database_connected' => $dbConnected,
             'database_error' => $dbError,
             'session_driver' => config('session.driver'),
+            'session_connection' => config('session.connection'),
+            'session_files_path' => config('session.files'),
             'cache_driver' => config('cache.default'),
         ]);
     } catch (\Exception $e) {
