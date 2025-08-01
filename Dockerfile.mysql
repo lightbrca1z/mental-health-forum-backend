@@ -71,7 +71,8 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '    echo "LOG_CHANNEL=stack" >> .env' >> /start.sh && \
     echo '    echo "LOG_LEVEL=error" >> .env' >> /start.sh && \
     echo '    echo "SESSION_DRIVER=file" >> .env' >> /start.sh && \
-    echo '    echo "SESSION_CONNECTION=" >> .env' >> /start.sh && \
+    echo '    echo "SESSION_CONNECTION=null" >> .env' >> /start.sh && \
+    echo '    echo "SESSION_TABLE=null" >> .env' >> /start.sh && \
     echo '    echo "CACHE_DRIVER=file" >> .env' >> /start.sh && \
     echo '  fi' >> /start.sh && \
     echo 'fi' >> /start.sh && \
@@ -79,6 +80,7 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'mkdir -p storage/framework/sessions' >> /start.sh && \
     echo 'chmod -R 777 storage/framework/sessions' >> /start.sh && \
     echo 'chown -R www-data:www-data storage/framework/sessions' >> /start.sh && \
+    echo 'touch storage/framework/sessions/.gitkeep' >> /start.sh && \
     echo 'echo "Generating application key..."' >> /start.sh && \
     echo 'php artisan key:generate --force --show' >> /start.sh && \
     echo 'echo "Running migrations..."' >> /start.sh && \

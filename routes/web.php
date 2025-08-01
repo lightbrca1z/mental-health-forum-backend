@@ -40,7 +40,9 @@ Route::get('/debug', function () {
             'database_error' => $dbError,
             'session_driver' => config('session.driver'),
             'session_connection' => config('session.connection'),
+            'session_table' => config('session.table'),
             'session_files_path' => config('session.files'),
+            'session_files_exists' => is_dir(config('session.files')),
             'cache_driver' => config('cache.default'),
         ]);
     } catch (\Exception $e) {

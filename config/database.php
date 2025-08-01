@@ -41,6 +41,9 @@ return [
             'journal_mode' => null,
             'synchronous' => null,
             'strict' => false,
+            'options' => [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ],
         ],
 
         'mysql' => [
