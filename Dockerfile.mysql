@@ -40,6 +40,8 @@ RUN php artisan package:discover --ansi
 RUN chown -R www-data:www-data /var/www
 RUN chmod -R 755 /var/www/storage
 RUN chmod -R 755 /var/www/bootstrap/cache
+RUN mkdir -p /var/www/storage/framework/sessions
+RUN chmod -R 755 /var/www/storage/framework/sessions
 
 # Create startup script
 RUN echo '#!/bin/sh' > /start.sh && \
@@ -68,10 +70,13 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo '    echo "DB_PASSWORD=" >> .env' >> /start.sh && \
     echo '    echo "LOG_CHANNEL=stack" >> .env' >> /start.sh && \
     echo '    echo "LOG_LEVEL=error" >> .env' >> /start.sh && \
-    echo '    echo "SESSION_DRIVER=database" >> .env' >> /start.sh && \
+    echo '    echo "SESSION_DRIVER=file" >> .env' >> /start.sh && \
     echo '    echo "CACHE_DRIVER=file" >> .env' >> /start.sh && \
     echo '  fi' >> /start.sh && \
     echo 'fi' >> /start.sh && \
+    echo 'echo "Creating session directory..."' >> /start.sh && \
+    echo 'mkdir -p storage/framework/sessions' >> /start.sh && \
+    echo 'chmod -R 755 storage/framework/sessions' >> /start.sh && \
     echo 'echo "Generating application key..."' >> /start.sh && \
     echo 'php artisan key:generate --force --show' >> /start.sh && \
     echo 'echo "Running migrations..."' >> /start.sh && \
