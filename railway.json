@@ -5,8 +5,6 @@
     "dockerfilePath": "Dockerfile.mysql"
   },
   "deploy": {
-    "healthcheckPath": "/health/detailed",
-    "healthcheckTimeout": 900,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
