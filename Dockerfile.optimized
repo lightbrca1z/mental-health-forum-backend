@@ -24,11 +24,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents first
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install dependencies (without artisan discovery)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Run artisan commands after all files are copied
+RUN php artisan package:discover --ansi
 
 # Create database directory and file
 RUN mkdir -p /var/www/database

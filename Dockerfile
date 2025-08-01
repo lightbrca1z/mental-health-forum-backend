@@ -37,14 +37,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy composer files first for better caching
-COPY composer.json composer.lock ./
+# Copy existing application directory contents first
+COPY . /var/www
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Copy existing application directory contents
-COPY . /var/www
 
 # Create database directory and file
 RUN mkdir -p /var/www/database
