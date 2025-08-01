@@ -50,9 +50,22 @@ RUN chmod 664 /var/www/database/database.sqlite
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'set -e' >> /start.sh && \
     echo 'echo "Starting Laravel application..."' >> /start.sh && \
+    echo 'echo "Current directory: $(pwd)"' >> /start.sh && \
+    echo 'echo "Files in current directory:"' >> /start.sh && \
+    echo 'ls -la' >> /start.sh && \
     echo 'if [ ! -f .env ]; then' >> /start.sh && \
     echo '  echo "Creating .env file..."' >> /start.sh && \
-    echo '  cp .env.example .env' >> /start.sh && \
+    echo '  if [ -f .env.example ]; then' >> /start.sh && \
+    echo '    cp .env.example .env' >> /start.sh && \
+    echo '  else' >> /start.sh && \
+    echo '    echo "APP_NAME=Laravel" > .env' >> /start.sh && \
+    echo '    echo "APP_ENV=production" >> .env' >> /start.sh && \
+    echo '    echo "APP_KEY=" >> .env' >> /start.sh && \
+    echo '    echo "APP_DEBUG=false" >> .env' >> /start.sh && \
+    echo '    echo "APP_URL=http://localhost" >> .env' >> /start.sh && \
+    echo '    echo "DB_CONNECTION=sqlite" >> .env' >> /start.sh && \
+    echo '    echo "DB_DATABASE=/var/www/database/database.sqlite" >> .env' >> /start.sh && \
+    echo '  fi' >> /start.sh && \
     echo 'fi' >> /start.sh && \
     echo 'if [ ! -f database/database.sqlite ]; then' >> /start.sh && \
     echo '  echo "Creating database file..."' >> /start.sh && \
@@ -63,6 +76,10 @@ RUN echo '#!/bin/sh' > /start.sh && \
     echo 'php artisan key:generate --force' >> /start.sh && \
     echo 'echo "Running migrations..."' >> /start.sh && \
     echo 'php artisan migrate --force' >> /start.sh && \
+    echo 'echo "Clearing caches..."' >> /start.sh && \
+    echo 'php artisan config:clear' >> /start.sh && \
+    echo 'php artisan route:clear' >> /start.sh && \
+    echo 'php artisan cache:clear' >> /start.sh && \
     echo 'echo "Starting server on port $PORT..."' >> /start.sh && \
     echo 'php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
     chmod +x /start.sh
