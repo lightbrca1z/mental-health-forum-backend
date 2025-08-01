@@ -1,20 +1,19 @@
-FROM php:8.2-cli
+FROM php:8.2-cli-alpine
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libonig-dev \
+    oniguruma-dev \
     libxml2-dev \
     zip \
     unzip \
-    default-mysql-client \
-    libmysqlclient-dev \
-    pkg-config
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    mysql-client \
+    mysql-dev \
+    pkgconfig \
+    autoconf \
+    build-base
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
@@ -25,18 +24,65 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install dependencies (without artisan discovery)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Run artisan commands after all files are copied
+RUN php artisan package:discover --ansi
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 755 /var/www/storage
+RUN chmod -R 755 /var/www/bootstrap/cache
 
 # Create startup script
-RUN echo '#!/bin/bash' > /start.sh && \
-    echo 'if [ ! -f .env ]; then cp .env.example .env; fi' >> /start.sh && \
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'set -e' >> /start.sh && \
+    echo 'echo "Starting Laravel application with MySQL..."' >> /start.sh && \
+    echo 'echo "Current directory: $(pwd)"' >> /start.sh && \
+    echo 'echo "Environment variables:"' >> /start.sh && \
+    echo 'echo "PORT: $PORT"' >> /start.sh && \
+    echo 'echo "APP_ENV: $APP_ENV"' >> /start.sh && \
+    echo 'echo "DB_HOST: $DB_HOST"' >> /start.sh && \
+    echo 'echo "DB_DATABASE: $DB_DATABASE"' >> /start.sh && \
+    echo 'if [ ! -f .env ]; then' >> /start.sh && \
+    echo '  echo "Creating .env file..."' >> /start.sh && \
+    echo '  if [ -f .env.example ]; then' >> /start.sh && \
+    echo '    cp .env.example .env' >> /start.sh && \
+    echo '  else' >> /start.sh && \
+    echo '    echo "APP_NAME=Laravel" > .env' >> /start.sh && \
+    echo '    echo "APP_ENV=production" >> .env' >> /start.sh && \
+    echo '    echo "APP_KEY=" >> .env' >> /start.sh && \
+    echo '    echo "APP_DEBUG=false" >> .env' >> /start.sh && \
+    echo '    echo "APP_URL=http://localhost" >> .env' >> /start.sh && \
+    echo '    echo "DB_CONNECTION=mysql" >> .env' >> /start.sh && \
+    echo '    echo "DB_HOST=127.0.0.1" >> .env' >> /start.sh && \
+    echo '    echo "DB_PORT=3306" >> .env' >> /start.sh && \
+    echo '    echo "DB_DATABASE=mental_health_forum" >> .env' >> /start.sh && \
+    echo '    echo "DB_USERNAME=root" >> .env' >> /start.sh && \
+    echo '    echo "DB_PASSWORD=" >> .env' >> /start.sh && \
+    echo '    echo "LOG_CHANNEL=stack" >> .env' >> /start.sh && \
+    echo '    echo "LOG_LEVEL=error" >> .env' >> /start.sh && \
+    echo '  fi' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo 'echo "Generating application key..."' >> /start.sh && \
     echo 'php artisan key:generate --force' >> /start.sh && \
+    echo 'echo "Running migrations..."' >> /start.sh && \
     echo 'php artisan migrate --force' >> /start.sh && \
-    echo 'php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
+    echo 'echo "Clearing caches..."' >> /start.sh && \
+    echo 'php artisan config:clear' >> /start.sh && \
+    echo 'php artisan route:clear' >> /start.sh && \
+    echo 'php artisan cache:clear' >> /start.sh && \
+    echo 'echo "Testing health check endpoint..."' >> /start.sh && \
+    echo 'php artisan route:list | grep health' >> /start.sh && \
+    echo 'echo "Starting server on port $PORT..."' >> /start.sh && \
+    echo 'exec php artisan serve --host=0.0.0.0 --port=$PORT' >> /start.sh && \
     chmod +x /start.sh
 
 EXPOSE 8000
