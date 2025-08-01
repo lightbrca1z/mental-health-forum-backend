@@ -14,6 +14,7 @@ Route::get('/debug', function () {
         $dbConnected = false;
         $dbError = null;
         $dbConfig = config('database.connections.' . config('database.default'));
+        $appKey = config('app.key');
         
         try {
             DB::connection()->getPdo();
@@ -28,6 +29,8 @@ Route::get('/debug', function () {
             'database' => config('database.default'),
             'app_env' => config('app.env'),
             'app_debug' => config('app.debug'),
+            'app_key_exists' => !empty($appKey),
+            'app_key_length' => strlen($appKey),
             'database_config' => [
                 'driver' => $dbConfig['driver'] ?? 'unknown',
                 'host' => $dbConfig['host'] ?? 'unknown',
@@ -35,6 +38,8 @@ Route::get('/debug', function () {
             ],
             'database_connected' => $dbConnected,
             'database_error' => $dbError,
+            'session_driver' => config('session.driver'),
+            'cache_driver' => config('cache.default'),
         ]);
     } catch (\Exception $e) {
         return response()->json([
