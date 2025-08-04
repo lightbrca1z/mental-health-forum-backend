@@ -36,5 +36,12 @@ Route::get('/debug', function () {
         'database' => config('database.default'),
         'app_env' => config('app.env'),
         'app_debug' => config('app.debug'),
+        'app_url' => config('app.url'),
+        'cors_allowed_origins' => config('cors.allowed_origins'),
+        'cors_allowed_methods' => config('cors.allowed_methods'),
+        'cors_allowed_headers' => config('cors.allowed_headers'),
+        'request_origin' => request()->header('Origin'),
+        'request_method' => request()->method(),
+        'request_headers' => request()->headers->all(),
     ]);
 }); 
