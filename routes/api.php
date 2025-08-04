@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 // CORS プリフライトリクエストを処理
 Route::options('{any}', function () {
@@ -30,7 +32,7 @@ Route::middleware(['api', 'cors'])->group(function () {
 
 // デバッグ用エンドポイント
 Route::get('/debug', function () {
-    return response()->json([
+    $debugInfo = [
         'status' => 'ok',
         'timestamp' => now(),
         'database' => config('database.default'),
@@ -43,5 +45,36 @@ Route::get('/debug', function () {
         'request_origin' => request()->header('Origin'),
         'request_method' => request()->method(),
         'request_headers' => request()->headers->all(),
-    ]);
+    ];
+
+    // データベース接続テスト
+    try {
+        $pdo = DB::connection()->getPdo();
+        $debugInfo['database_connection'] = 'success';
+        $debugInfo['database_name'] = $pdo->query('SELECT DATABASE()')->fetchColumn();
+        
+        // テーブル一覧を取得
+        $tables = [];
+        if (Schema::hasTable('posts')) {
+            $tables['posts'] = Schema::getColumnListing('posts');
+        }
+        if (Schema::hasTable('comments')) {
+            $tables['comments'] = Schema::getColumnListing('comments');
+        }
+        $debugInfo['tables'] = $tables;
+        
+        // 投稿数を取得
+        try {
+            $postCount = DB::table('posts')->count();
+            $debugInfo['post_count'] = $postCount;
+        } catch (\Exception $e) {
+            $debugInfo['post_count'] = 'error: ' . $e->getMessage();
+        }
+        
+    } catch (\Exception $e) {
+        $debugInfo['database_connection'] = 'failed';
+        $debugInfo['database_error'] = $e->getMessage();
+    }
+
+    return response()->json($debugInfo);
 }); 

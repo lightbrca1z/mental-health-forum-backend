@@ -6,6 +6,7 @@ use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PostController extends Controller
 {
@@ -18,10 +19,38 @@ class PostController extends Controller
             DB::connection()->getPdo();
             Log::info('Database connection successful');
             
+            // テーブルの存在を確認
+            if (!Schema::hasTable('posts')) {
+                Log::error('Posts table does not exist');
+                return response()->json([
+                    'error' => 'Database table not found',
+                    'message' => 'Posts table does not exist. Please run migrations.',
+                    'suggestion' => 'Run: php artisan migrate'
+                ], 500);
+            }
+            
+            // テーブルの構造を確認
+            $columns = Schema::getColumnListing('posts');
+            Log::info('Posts table columns:', $columns);
+            
             $posts = Post::with('comments')->orderBy('created_at', 'desc')->get();
             Log::info('Posts fetched successfully', ['count' => $posts->count()]);
             
             return response()->json($posts);
+        } catch (\PDOException $e) {
+            Log::error('Database connection error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'code' => $e->getCode()
+            ]);
+            
+            return response()->json([
+                'error' => 'Database connection failed',
+                'message' => $e->getMessage(),
+                'type' => 'PDOException',
+                'code' => $e->getCode(),
+                'suggestion' => 'Check database configuration and connection'
+            ], 500);
         } catch (\Exception $e) {
             Log::error('Error fetching posts: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
@@ -32,6 +61,7 @@ class PostController extends Controller
             return response()->json([
                 'error' => 'Failed to fetch posts',
                 'message' => $e->getMessage(),
+                'type' => get_class($e),
                 'debug' => config('app.debug') ? $e->getTraceAsString() : null
             ], 500);
         }
